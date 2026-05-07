@@ -1,15 +1,16 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, Bot, MessageSquare, RefreshCw } from 'lucide-react'
+import { Plus, Bot, MessageSquare, RefreshCw, History, Zap } from 'lucide-react'
 import { apiClient } from '@/lib/api-client'
 import { ToastContainer } from '@/components/ui/toast'
 import { useToast } from '@/hooks/use-toast'
 import { ProviderCard } from './provider-card'
 import { ProviderForm } from './provider-form'
 import { AiChat } from './ai-chat'
+import { AiConversations } from './ai-conversations'
 import type { AiProvider } from '@/types/ai'
 
-type Tab = 'providers' | 'chat'
+type Tab = 'providers' | 'chat' | 'history'
 
 export function AiManagement() {
   const [tab, setTab] = useState<Tab>('providers')
@@ -71,13 +72,33 @@ export function AiManagement() {
     setTesting(provider.id)
     try {
       const { data } = await apiClient.post(`/api/ai-providers/${provider.id}/test`)
-      show(`✅ Kết nối thành công! Response: "${data.response}" (${data.tokens} tokens)`, 'success')
+      show(`✅ ${provider.name}: OK — "${data.response?.slice(0, 60)}" (${data.tokens} tokens)`, 'success')
+      // Update quota status locally
+      setProviders(prev => prev.map(p =>
+        p.id === provider.id ? { ...p, quota_status: 'ok', last_tested_at: new Date().toISOString(), last_error: undefined } : p
+      ))
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Kết nối thất bại'
-      show(`❌ ${msg}`, 'error')
+      const isQuota = msg.includes('429') || msg.includes('quota') || msg.includes('rate')
+      const isExpired = msg.includes('401') || msg.includes('invalid') || msg.includes('expired')
+      const status = isQuota ? 'exhausted' : isExpired ? 'error' : 'error'
+      show(`❌ ${provider.name}: ${msg}`, 'error')
+      setProviders(prev => prev.map(p =>
+        p.id === provider.id ? { ...p, quota_status: status, last_tested_at: new Date().toISOString(), last_error: msg } : p
+      ))
     } finally {
       setTesting(null)
     }
+  }
+
+  const handleTestAll = async () => {
+    show('Đang kiểm tra tất cả providers...', 'info' as any)
+    for (const p of providers) {
+      if (!p.is_active) continue
+      await handleTest(p)
+      await new Promise(r => setTimeout(r, 800)) // tránh rate limit
+    }
+    show('Đã kiểm tra xong tất cả providers', 'success')
   }
 
   const handleToggleActive = async (provider: AiProvider) => {
@@ -99,8 +120,9 @@ export function AiManagement() {
   }
 
   const TABS = [
-    { key: 'providers' as Tab, label: 'Providers', icon: Bot },
-    { key: 'chat' as Tab,      label: 'AI Chat',   icon: MessageSquare },
+    { key: 'providers' as Tab, label: 'Providers',   icon: Bot },
+    { key: 'chat'      as Tab, label: 'AI Chat',     icon: MessageSquare },
+    { key: 'history'   as Tab, label: 'Hội thoại',   icon: History },
   ]
 
   return (
@@ -119,6 +141,12 @@ export function AiManagement() {
               <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
               Làm mới
             </button>
+            {tab === 'providers' && providers.length > 0 && (
+              <button onClick={handleTestAll}
+                className="flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                <Zap size={14} /> Kiểm tra tất cả
+              </button>
+            )}
             {tab === 'providers' && (
               <button onClick={() => { setEditing(null); setShowForm(true) }}
                 className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors">
@@ -195,6 +223,7 @@ export function AiManagement() {
         )}
 
         {tab === 'chat' && <AiChat providers={providers} />}
+        {tab === 'history' && <AiConversations />}
       </div>
 
       {/* Form modal */}

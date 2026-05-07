@@ -5,7 +5,7 @@ interface Setting { key: string; value: string | null; type: string; label: stri
 interface Props {
   settings: Setting[]
   values: Record<string, string>
-  setValues: React.Dispatch<React.SetStateAction<Record<string, string>>>
+  setValues: (updater: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => void
 }
 
 export function TabSeo({ settings, values, setValues }: Props) {

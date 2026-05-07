@@ -1,6 +1,9 @@
+// Server component — không re-render khi navigate
 import { AdminSidebar } from '@/components/layout/admin-sidebar'
 import { AdminHeader } from '@/components/layout/admin-header'
 import { AdminSettingsProvider } from '@/lib/admin-settings-context'
+import { FloatingAiAssistant } from '@/components/ai/floating-ai-assistant'
+import { PushNotificationsInit } from '@/components/layout/push-notifications-init'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -14,6 +17,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </main>
         </div>
       </div>
+      <FloatingAiAssistant />
+      <PushNotificationsInit />
     </AdminSettingsProvider>
   )
 }

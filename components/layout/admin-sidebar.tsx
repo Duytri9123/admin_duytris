@@ -1,6 +1,6 @@
 'use client'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Package, Tag, Bookmark, ShoppingCart, Users, BarChart2, Settings, ChevronLeft, ChevronRight, X, Bot } from 'lucide-react'
+import { LayoutDashboard, Package, Tag, Bookmark, ShoppingCart, Users, BarChart2, Settings, ChevronLeft, ChevronRight, X, Bot, Star, Bell, FileText, Image as ImageIcon, Link2 } from 'lucide-react'
 import { useSidebarStore } from '@/stores/sidebar-store'
 import { useAdminSettings } from '@/lib/admin-settings-context'
 import { SidebarLogo } from './sidebar-logo'
@@ -8,15 +8,20 @@ import { SidebarNavItem } from './sidebar-nav-item'
 import { useAuth } from '@/hooks/use-auth'
 
 const NAV_ITEMS = [
-  { href: '/dashboard',            label: 'Dashboard',   icon: LayoutDashboard },
-  { href: '/dashboard/products',   label: 'Sản phẩm',    icon: Package },
-  { href: '/dashboard/categories', label: 'Danh mục',    icon: Tag },
-  { href: '/dashboard/brands',     label: 'Thương hiệu', icon: Bookmark },
-  { href: '/dashboard/orders',     label: 'Đơn hàng',    icon: ShoppingCart },
-  { href: '/dashboard/users',      label: 'Người dùng',  icon: Users },
-  { href: '/dashboard/analytics',  label: 'Thống kê',    icon: BarChart2 },
-  { href: '/dashboard/ai',         label: 'AI',          icon: Bot },
-  { href: '/dashboard/settings',   label: 'Cài đặt',     icon: Settings },
+  { href: '/dashboard',                label: 'Dashboard',    icon: LayoutDashboard },
+  { href: '/dashboard/products',       label: 'Sản phẩm',     icon: Package },
+  { href: '/dashboard/affiliate',      label: 'Affiliate',    icon: Link2 },
+  { href: '/dashboard/categories',     label: 'Danh mục',     icon: Tag },
+  { href: '/dashboard/brands',         label: 'Thương hiệu',  icon: Bookmark },
+  { href: '/dashboard/orders',         label: 'Đơn hàng',     icon: ShoppingCart },
+  { href: '/dashboard/reviews',        label: 'Đánh giá',     icon: Star },
+  { href: '/dashboard/users',          label: 'Người dùng',   icon: Users },
+  { href: '/dashboard/banners',        label: 'Banner',       icon: ImageIcon },
+  { href: '/dashboard/posts',          label: 'Bài viết',     icon: FileText },
+  { href: '/dashboard/notifications',  label: 'Thông báo',    icon: Bell },
+  { href: '/dashboard/analytics',      label: 'Thống kê',     icon: BarChart2 },
+  { href: '/dashboard/ai',             label: 'AI',           icon: Bot },
+  { href: '/dashboard/settings',       label: 'Cài đặt',      icon: Settings },
 ]
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
@@ -34,7 +39,12 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
   const accent = settings.admin_accent_color || '#6366f1'
   const logoUrl = settings.admin_logo_url || settings.logo_url
   const siteName = settings.admin_site_name || settings.site_name || 'Admin Panel'
-  const fullLogoUrl = logoUrl ? `${API}${logoUrl}` : ''
+  function resolveLogoUrl(url: string | undefined): string {
+    if (!url) return ''
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:')) return url
+    return `${API}/${url.replace(/^\//, '')}`
+  }
+  const fullLogoUrl = resolveLogoUrl(logoUrl)
 
   return (
     <div className={`flex h-full flex-col ${theme.bg}`}>
@@ -75,7 +85,7 @@ export function AdminSidebar() {
 
   return (
     <>
-      <aside className={`relative hidden md:flex flex-col transition-all duration-300 ease-in-out shrink-0 ${collapsed ? 'w-16' : 'w-60'}`} style={{ minHeight: '100vh' }}>
+      <aside className={`relative hidden md:flex flex-col transition-all duration-300 ease-in-out shrink-0 sticky top-0 h-screen ${collapsed ? 'w-16' : 'w-60'}`}>
         <SidebarContent collapsed={collapsed} />
         <button onClick={toggle}
           className={`absolute -right-3 top-16 z-10 flex h-6 w-6 items-center justify-center rounded-full border shadow-md transition-colors ${theme.toggleBg} ${theme.toggleText}`}

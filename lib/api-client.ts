@@ -25,6 +25,12 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     if (error.response?.status === 401) {
+      // Clear cookies to prevent middleware redirect loop
+      if (typeof document !== 'undefined') {
+        document.cookie = 'auth_user=; path=/; max-age=0; SameSite=Lax'
+        document.cookie = 'is_admin=; path=/; max-age=0; SameSite=Lax'
+      }
+
       // Chỉ redirect nếu không phải đang ở /login và không phải call /api/user
       if (
         typeof window !== 'undefined' &&
@@ -61,6 +67,35 @@ export const api = {
     await getCsrfCookie()
     return apiClient.delete<T>(url)
   },
+
+  // PATCH - cần CSRF cookie trước
+  patch: async <T>(url: string, data?: unknown) => {
+    await getCsrfCookie()
+    return apiClient.patch<T>(url, data)
+  },
 }
 
 export default api
+
+// Support Ticket Admin API functions
+export const supportTicketAdminApi = {
+  getTickets: async (params?: {
+    category?: string
+    status?: string
+    priority?: string
+    search?: string
+    date_from?: string
+    date_to?: string
+    per_page?: number
+    page?: number
+  }) => api.get('/admin/support-tickets', params),
+
+  getTicketDetail: async (ticketId: number) =>
+    api.get(`/admin/support-tickets/${ticketId}`),
+
+  updateTicketStatus: async (ticketId: number, status: string) =>
+    api.put(`/admin/support-tickets/${ticketId}/status`, { status }),
+
+  getStats: async () =>
+    api.get('/admin/support-tickets/stats'),
+}

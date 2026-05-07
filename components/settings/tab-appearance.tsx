@@ -6,9 +6,15 @@ import { Toggle } from '@/components/ui/toggle'
 const FONTS = ['Inter', 'Roboto', 'Open Sans', 'Montserrat', 'Nunito', 'Poppins']
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
+function resolveUrl(url: string | undefined): string {
+  if (!url) return ''
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:')) return url
+  return `${API}/${url.replace(/^\//, '')}`
+}
+
 interface Props {
   values: Record<string, string>
-  setValues: React.Dispatch<React.SetStateAction<Record<string, string>>>
+  setValues: (updater: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => void
   uploading: string | null
   onUpload: (key: 'logo_url' | 'favicon_url', file: File) => void
 }
@@ -31,8 +37,14 @@ export function TabAppearance({ values, setValues, uploading, onUpload }: Props)
             <div key={key}>
               <p className="mb-2 text-sm font-medium text-gray-700">{label}</p>
               <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-gray-300 p-5 hover:border-indigo-400 transition-colors">
-                {values[key] ? (
-                  <img src={`${API}${values[key]}`} alt={label} className="h-16 object-contain" />
+                {values[key] && values[key].trim() ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={resolveUrl(values[key])}
+                    alt={label}
+                    className="h-16 object-contain"
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                  />
                 ) : (
                   <div className="flex h-16 w-full items-center justify-center rounded-lg bg-gray-100 text-xs text-gray-400">
                     Chưa có {label.toLowerCase()}

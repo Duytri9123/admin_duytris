@@ -1,4 +1,4 @@
-export type AiProviderType = 'openai' | 'google' | 'anthropic' | 'ollama' | 'custom'
+export type AiProviderType = 'openai' | 'openrouter' | 'google' | 'anthropic' | 'ollama' | 'custom'
 
 export interface AiProvider {
   id: number
@@ -13,6 +13,10 @@ export interface AiProvider {
   capabilities: string[]
   system_prompt?: string
   created_at: string
+  // quota check fields (optional, returned by health check)
+  quota_status?: 'ok' | 'limited' | 'exhausted' | 'error' | 'unknown'
+  last_tested_at?: string
+  last_error?: string
 }
 
 export interface ChatMessage {
@@ -38,10 +42,15 @@ export const PROVIDER_META: Record<AiProviderType, { label: string; color: strin
     color: '#10a37f',
     models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'],
   },
+  openrouter: {
+    label: 'OpenRouter',
+    color: '#7c3aed',
+    models: ['openrouter/free', 'google/gemma-4-31b-it:free', 'openai/gpt-oss-20b:free', 'meta-llama/llama-3.3-70b-instruct:free'],
+  },
   google: {
     label: 'Google Gemini',
     color: '#4285f4',
-    models: ['gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-pro'],
+    models: ['gemini-2.0-flash', 'gemma-3-27b-it', 'gemma-3-12b-it', 'gemma-3-4b-it'],
   },
   anthropic: {
     label: 'Anthropic Claude',
@@ -60,4 +69,4 @@ export const PROVIDER_META: Record<AiProviderType, { label: string; color: strin
   },
 }
 
-export const CAPABILITIES = ['chat', 'code', 'analysis', 'image', 'search', 'translation']
+export const CAPABILITIES = ['chat', 'code', 'analysis', 'image', 'search', 'translation', 'product', 'seo', 'review', 'classify', 'summarize']

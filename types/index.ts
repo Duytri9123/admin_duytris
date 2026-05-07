@@ -6,8 +6,13 @@ export interface User {
   name: string
   email: string
   isAdmin: boolean
+  is_banned?: boolean
+  banned_reason?: string | null
+  banned_at?: string | null
   email_verified_at: string | null
   created_at: string
+  orders_count?: number
+  complaints_count?: number
 }
 
 // ===== PRODUCT =====
@@ -233,4 +238,26 @@ export interface RegisterData {
   email: string
   password: string
   password_confirmation: string
+}
+
+// ===== COMPLAINT =====
+export type ComplaintType = 'spam' | 'fraud' | 'inappropriate' | 'payment_dispute' | 'delivery_issue' | 'other'
+export type ComplaintStatus = 'open' | 'investigating' | 'resolved' | 'dismissed'
+
+export interface UserComplaint {
+  id: number
+  reported_user_id: number
+  reporter_id: number | null
+  order_id: number | null
+  type: ComplaintType
+  description: string
+  status: ComplaintStatus
+  admin_note: string | null
+  resolved_by: number | null
+  resolved_at: string | null
+  created_at: string
+  reported_user?: Pick<User, 'id' | 'name' | 'email'>
+  reporter?: Pick<User, 'id' | 'name' | 'email'> | null
+  order?: { id: number; order_number: string } | null
+  resolvedBy?: Pick<User, 'id' | 'name'> | null
 }

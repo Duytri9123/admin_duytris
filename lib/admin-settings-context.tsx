@@ -1,5 +1,5 @@
 'use client'
-import { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { apiClient } from './api-client'
 
 export interface AdminSettings {
@@ -43,19 +43,26 @@ const AdminSettingsContext = createContext<AdminSettingsContextValue>({
 
 export function AdminSettingsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<AdminSettings>(DEFAULTS)
+  const loaded = useRef(false)
 
   const load = useCallback(() => {
+    loaded.current = true
     apiClient.get('/api/settings/flat')
       .then(({ data }) => {
         setSettings({ ...DEFAULTS, ...data.data })
       })
-      .catch(() => {})
+      .catch(() => { loaded.current = false }) // Reset nếu lỗi để có thể retry
   }, [])
 
-  useEffect(() => { load() }, [load])
+  const reload = useCallback(() => {
+    loaded.current = false
+    load()
+  }, [load])
+
+  useEffect(() => { load() }, []) // Empty deps — chỉ chạy 1 lần khi mount
 
   return (
-    <AdminSettingsContext.Provider value={{ settings, reload: load }}>
+    <AdminSettingsContext.Provider value={{ settings, reload }}>
       {children}
     </AdminSettingsContext.Provider>
   )

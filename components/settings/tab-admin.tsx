@@ -23,13 +23,13 @@ const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 function resolveUrl(url: string | undefined): string {
   if (!url) return ''
-  if (url.startsWith('blob:') || url.startsWith('http')) return url
-  return `${API}${url}`
+  if (url.startsWith('blob:') || url.startsWith('http://') || url.startsWith('https://')) return url
+  return `${API}/${url.replace(/^\//, '')}`
 }
 
 interface Props {
   values: Record<string, string>
-  setValues: React.Dispatch<React.SetStateAction<Record<string, string>>>
+  setValues: (updater: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => void
   uploading?: string | null
   onUpload?: (key: string, file: File) => void
 }

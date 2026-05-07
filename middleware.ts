@@ -8,6 +8,18 @@ const GUEST_ONLY_ROUTES = ['/login'];
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Redirect root "/" về dashboard hoặc login
+  if (pathname === '/') {
+    const authCookie = request.cookies.get('auth_user');
+    const adminCookie = request.cookies.get('is_admin');
+    const isAuthenticated = !!authCookie?.value;
+    const isAdmin = !!adminCookie?.value;
+    if (isAuthenticated && isAdmin) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
   // Bỏ qua static files và api routes
   if (
     pathname.startsWith('/_next') ||
@@ -42,5 +54,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/login'],
+  matcher: ['/', '/dashboard/:path*', '/login'],
 };
